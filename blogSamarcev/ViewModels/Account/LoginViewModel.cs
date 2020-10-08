@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication3.ViewModels.Account
+namespace blogSamarcev.ViewModels.Account
 {
     /// <summary>
     /// Модель для авторизации пользователя

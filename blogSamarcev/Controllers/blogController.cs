@@ -9,7 +9,7 @@ namespace blogSamarcev.Controllers
     /// <summary>
     /// Конструктор для работы со страницами блога
     /// </summary>
-    public class blogController : Controller
+    public class BlogController : Controller
     {
         /// <summary>
         /// Метод возращающий страницу блога
