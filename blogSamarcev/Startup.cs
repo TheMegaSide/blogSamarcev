@@ -2,12 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using blogSamarcev.Domain.DB;
+using blogSamarcev.Domain.Model;
+using blogSamarcev.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using blogSamarcev.Infrastructure.Guarantors;
 
 namespace blogSamarcev
 {
@@ -24,6 +30,18 @@ namespace blogSamarcev
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddDbContext<BlogDbContext>(options => options.UseNpgsql("Username=postgres; Database=blog;Password=6851;Host=localhost"));
+            services.AddIdentity<User, IdentityRole<int>>(options =>
+             {
+                 options.Password.RequireLowercase = false;
+                 options.Password.RequireUppercase = false;
+                 options.Password.RequireNonAlphanumeric = false;
+                 options.Password.RequireDigit = false;
+             }).AddEntityFrameworkStores<BlogDbContext>();
+            var serviceProvider = services.BuildServiceProvider();
+            var guarantor = new SeedDataGuarantor(serviceProvider);
+            guarantor.EnsureAsync();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,7 +61,7 @@ namespace blogSamarcev
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -52,6 +70,23 @@ namespace blogSamarcev
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var guarantors = scope.ServiceProvider.GetServices<IStartupPreConditionGuarantor>();
+                try
+                {
+                    Console.WriteLine("Startup guarantors started");
+                    foreach (var guarantor in guarantors)
+                        guarantor.Ensure(scope.ServiceProvider);
+
+                    Console.WriteLine("Startup guarantors executed succesfully");
+                }
+                catch (StartupPreConditionException) 
+                {
+                    Console.WriteLine("Startup guarantor failed");
+                    throw;
+                }
+            }
         }
     }
 }
