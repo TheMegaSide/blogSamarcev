@@ -17,6 +17,7 @@
   <ItemGroup>
     <Folder Include="Exceptions\Http\" />
     <Folder Include="Infrastructure\Guarantors\" />
+    <Folder Include="Security\Extensions\" />
     <Folder Include="Views\Account\" />
   </ItemGroup>
 
